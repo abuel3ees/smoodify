@@ -1,0 +1,59 @@
+services:
+  app:
+    build: .
+    container_name: smoodify_app
+    ports:
+      - "8080:80"
+    environment:
+      APP_NAME: Smoodify
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      LOG_CHANNEL: stderr
+
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: smoodify
+      DB_USERNAME: smoodify
+      DB_PASSWORD: smoodify_password
+
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+
+      # placeholder; real values go in .env locally and Secrets Manager on AWS later
+      SPOTIFY_CLIENT_ID: ""
+      SPOTIFY_CLIENT_SECRET: ""
+      SPOTIFY_REDIRECT_URI: "http://localhost:8080/auth/spotify/callback"
+
+      # encryption key will be set after Laravel install (APP_KEY)
+      APP_KEY: "base64:n+TNz2D+9J8Om4mhT/46SQXE32H3ulnWGuIDLCAKAcg="
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: mysql:8.0
+    container_name: smoodify_db
+    environment:
+      MYSQL_DATABASE: smoodify
+      MYSQL_USER: smoodify
+      MYSQL_PASSWORD: smoodify_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: smoodify_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  db_data:
