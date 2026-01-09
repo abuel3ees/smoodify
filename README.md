@@ -1,4 +1,4 @@
-# Link to the live web app: [website][an_awesome_website_link]
+# Link to the live web app: [SMOODIFY][an_awesome_website_link]
 [an_awesome_website_link]: https://smoodify.site
 # Smoodify 🎧✨
 **Music → Mood Analytics (Laravel + Inertia + Vite + shadcn/ui + R3F)**
@@ -424,4 +424,4 @@ php artisan queue:work
 ---
 
 ## License
-Add your license here (MIT recommended) or keep private.
+MIT LICENSE
