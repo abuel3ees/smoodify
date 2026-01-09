@@ -1,154 +1,141 @@
-Smoodify 🎧✨
+# Smoodify 🎧✨
+**Music → Mood Analytics (Laravel + Inertia + Vite + shadcn/ui + R3F)**
 
-Music → Mood Analytics Dashboard (Laravel + Inertia + Vite + shadcn/ui + R3F)
+Smoodify is a full-stack web app that analyzes listening behavior (valence/energy + play events) and turns it into a cinematic dashboard + explainable insights. It includes a scroll-driven 3D landing scene (React Three Fiber) and a modern dashboard UI (shadcn/ui + Recharts).
 
-Smoodify is a full-stack web app that analyzes listening behavior (valence/energy + play events) and turns it into a cinematic dashboard + insights feed. It includes a scroll-driven 3D landing scene (React Three Fiber) and a modern dashboard UI (shadcn/ui + Recharts).
+---
 
-⸻
+## Table of Contents
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Quick Start (Local Dev)](#quick-start-local-dev)
+- [Environment Variables](#environment-variables)
+- [Database Setup](#database-setup)
+- [Queues / Background Jobs](#queues--background-jobs)
+- [Vite / Assets](#vite--assets)
+- [Production Mode (Local)](#production-mode-local)
+- [Docker](#docker)
+- [AWS Deployment (ECR + ECS + ALB)](#aws-deployment-ecr--ecs--alb)
+- [Force HTTPS / Fix Mixed Content](#force-https--fix-mixed-content)
+- [Troubleshooting](#troubleshooting)
+- [Performance Tips](#performance-tips)
+- [Contributing](#contributing)
+- [License](#license)
 
-Table of Contents
-	•	Features￼
-	•	Tech Stack￼
-	•	Screenshots￼
-	•	Project Structure￼
-	•	Prerequisites￼
-	•	Local Setup (Recommended)￼
-	•	Environment Variables￼
-	•	Database Setup￼
-	•	Queues / Background Jobs￼
-	•	Building Assets (Vite)￼
-	•	Testing (Optional)￼
-	•	Docker￼
-	•	Deploying to AWS (ECR + ECS)￼
-	•	Force HTTPS / Fix Mixed Content￼
-	•	Troubleshooting￼
-	•	Performance Tips￼
-	•	Contributing￼
-	•	License￼
+---
 
-⸻
+## Features
+- Scroll-driven **3D landing page** (React Three Fiber + shaders)
+- **Dashboard**
+  - Daily mood trend: **valence** + **energy**
+  - Play volume trend
+  - Highlights: best day, toughest day, most plays, weekday signals
+- **Patterns**: explainable insights across weekday/time buckets
+- **Demo mode**: generate demo data + queue analysis
+- Optional **live refresh** while background jobs are running
+- Dark-mode-first UI design (Tailwind + shadcn/ui)
 
-Features
-	•	Cinematic landing page with scroll-driven 3D scene (React Three Fiber)
-	•	Mood dashboard
-	•	Daily valence/energy trend
-	•	Play volume trend
-	•	Highlights: best day, toughest day, most plays, weekday insights
-	•	Patterns: explainable insights across weekday/time buckets
-	•	Demo pipeline: generate demo data + queue analysis jobs
-	•	Live refresh support while jobs run
-	•	Dark-mode-first UI (Tailwind + shadcn/ui)
-	•	Optimized production build with Vite
+---
 
-⸻
+## Tech Stack
+### Backend
+- Laravel
+- Queues: Redis recommended (database queue supported)
+- DB: MySQL or Postgres
 
-Tech Stack
+### Frontend
+- Inertia.js + React
+- Vite
+- TailwindCSS + shadcn/ui
+- Recharts
+- Framer Motion
+- React Three Fiber + drei
 
-Backend
-	•	Laravel
-	•	Queues: Redis recommended (database queue supported)
-	•	Database: MySQL/Postgres
+---
 
-Frontend
-	•	Inertia.js + React
-	•	Vite
-	•	TailwindCSS + shadcn/ui
-	•	Recharts
-	•	Framer Motion
-	•	React Three Fiber + drei
-
-⸻
-
-Screenshots
-
-Add screenshots/GIFs here (recommended):
-	•	Landing (scroll scene)
-	•	Dashboard (charts + patterns)
-
-Example:
-
-![Dashboard](docs/screens/dashboard.png)
-
-
-⸻
-
-Project Structure
-
+## Project Structure
 Common paths you’ll touch:
-	•	resources/js/Pages/ → Inertia pages (Home, Dashboard, etc.)
-	•	resources/js/components/ → UI + 3D scene components
-	•	resources/css/ → Tailwind entry
-	•	routes/web.php → web routes
-	•	app/Jobs/ → background analysis jobs
-	•	app/Http/Controllers/ → endpoints (demo generation, dashboard data, etc.)
+- `resources/js/Pages/` → Inertia pages (Home, Dashboard, etc.)
+- `resources/js/components/` → UI + 3D scene components
+- `resources/css/` → Tailwind entry
+- `routes/web.php` → app routes
+- `app/Jobs/` → background analysis jobs
+- `app/Http/Controllers/` → demo generation + dashboard endpoints
 
-⸻
+---
 
-Prerequisites
-
+## Prerequisites
 Install these before you start.
 
-Required
-	•	PHP 8.2+ (8.3 recommended)
-	•	Composer
-	•	Node.js 18+ (Node 20 recommended)
-	•	npm (or pnpm/yarn)
-	•	Database: MySQL/Postgres
-	•	Git
+### Required
+- **PHP 8.2+** (8.3 recommended)
+- **Composer**
+- **Node.js 18+** (Node 20 recommended)
+- **npm** (or pnpm/yarn)
+- **Database**: MySQL or Postgres
+- **Git**
 
-Recommended
-	•	Redis (queue + cache)
-	•	Docker Desktop (container workflow)
+### Recommended
+- **Redis** (queue + cache)
+- **Docker Desktop** (optional)
+- macOS/Linux preferred (Windows works with WSL2)
 
-⸻
+---
 
-Local Setup (Recommended)
+## Quick Start (Local Dev)
 
-1) Clone the repo
-
+### 1) Clone
+```bash
 git clone https://github.com/<YOUR_ORG_OR_USER>/smoodify.git
 cd smoodify
+```
 
-2) Install backend dependencies
-
+### 2) Install backend deps
+```bash
 composer install
+```
 
-3) Install frontend dependencies
-
+### 3) Install frontend deps
+```bash
 npm install
+```
 
-4) Create .env
-
+### 4) Create `.env` + app key
+```bash
 cp .env.example .env
 php artisan key:generate
+```
 
-5) Configure .env
+### 5) Configure `.env`
+Update DB/Redis (see [Environment Variables](#environment-variables)).
 
-Update DB/Redis settings (see Environment Variables￼).
-
-6) Run migrations
-
+### 6) Migrate DB
+```bash
 php artisan migrate
+```
 
-7) Start dev servers (two terminals)
-
-Terminal A (Laravel):
-
+### 7) Run dev servers (two terminals)
+**Terminal A (Laravel)**
+```bash
 php artisan serve
+```
 
-Terminal B (Vite):
-
+**Terminal B (Vite)**
+```bash
 npm run dev
+```
 
 Open:
-	•	http://127.0.0.1:8000
+- http://127.0.0.1:8000
 
-⸻
+---
 
-Environment Variables
+## Environment Variables
 
-Minimum typical local config:
-
+### Minimum (local)
+```env
 APP_NAME=Smoodify
 APP_ENV=local
 APP_KEY=base64:...
@@ -165,9 +152,10 @@ DB_PASSWORD=
 CACHE_STORE=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=database
+```
 
-Redis (recommended)
-
+### Redis (recommended)
+```env
 CACHE_STORE=redis
 SESSION_DRIVER=redis
 QUEUE_CONNECTION=redis
@@ -175,242 +163,264 @@ QUEUE_CONNECTION=redis
 REDIS_HOST=127.0.0.1
 REDIS_PASSWORD=null
 REDIS_PORT=6379
+```
 
-Production (important)
-
+### Production (important)
+```env
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://smoodify.site
 ASSET_URL=https://smoodify.site
 SESSION_SECURE_COOKIE=true
+```
 
+> Tip: If your assets are behind a CDN (CloudFront), set `ASSET_URL` to the CDN origin.
 
-⸻
+---
 
-Database Setup
+## Database Setup
 
-MySQL quick start
-
+### MySQL quick start
+```sql
 CREATE DATABASE smoodify CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
 Then:
-
+```bash
 php artisan migrate
+```
 
+---
 
-⸻
+## Queues / Background Jobs
 
-Queues / Background Jobs
-
-Option A — Database queue
-	1.	Set:
-
+### Option A — Database queue (simple)
+1) Set:
+```env
 QUEUE_CONNECTION=database
+```
 
-	2.	Create queue tables:
-
+2) Create queue tables:
+```bash
 php artisan queue:table
 php artisan migrate
+```
 
-	3.	Run worker:
-
+3) Run worker:
+```bash
 php artisan queue:work
+```
 
-Option B — Redis queue (recommended)
-
+### Option B — Redis queue (recommended)
 Set:
-
+```env
 QUEUE_CONNECTION=redis
+```
 
 Run worker:
-
+```bash
 php artisan queue:work --sleep=1 --tries=3
+```
 
-Tip: Keep the worker running while generating demo data or importing datasets.
+> Tip: Keep the worker running while generating demo data / analysis jobs.
 
-⸻
+---
 
-Building Assets (Vite)
+## Vite / Assets
 
-Development
-
+### Development
+```bash
 npm run dev
+```
 
-Production build
+### Production build
+```bash
+npm run build
+```
 
+Output:
+- `public/build/` (including `manifest.json`)
+
+---
+
+## Production Mode (Local)
+This mimics production caching behavior:
+
+```bash
+php artisan optimize:clear
 npm run build
 
-Vite outputs to:
-	•	public/build/
+APP_ENV=production APP_DEBUG=false php artisan config:cache
+APP_ENV=production APP_DEBUG=false php artisan route:cache
+APP_ENV=production APP_DEBUG=false php artisan view:cache
 
-⸻
+php artisan serve
+```
 
-Testing (Optional)
+---
 
-If your project includes tests:
+## Docker
 
-php artisan test
+### Notes
+- Production containers should include:
+  - `vendor/` (Composer install)
+  - `public/build/` (Vite build)
+- Common setup is **Nginx + PHP-FPM** behind an AWS ALB.
 
-
-⸻
-
-Docker
-
-Notes
-	•	Production images should include:
-	•	vendor/ (Composer install)
-	•	public/build/ (Vite build)
-	•	Serve Laravel via Nginx + PHP-FPM behind an AWS ALB.
-
-Build and run (example)
-
+### Build + run (example)
+```bash
 docker build -t smoodify:latest .
 docker run -p 8080:8080 --env-file .env smoodify:latest
+```
 
 Open:
-	•	http://localhost:8080
+- http://localhost:8080
 
-⸻
+---
 
-Deploying to AWS (ECR + ECS)
+## AWS Deployment (ECR + ECS + ALB)
 
 Target (provided):
-	•	Region: eu-central-1
-	•	ECR Repo URI: 987307484276.dkr.ecr.eu-central-1.amazonaws.com/smoodify
+- **Region:** `eu-central-1`
+- **ECR Repo URI:** `987307484276.dkr.ecr.eu-central-1.amazonaws.com/smoodify`
 
-1) Login to ECR
-
+### 1) Login to ECR
+```bash
 aws configure set region eu-central-1
 
 aws ecr get-login-password --region eu-central-1 \
   | docker login --username AWS --password-stdin 987307484276.dkr.ecr.eu-central-1.amazonaws.com
+```
 
-2) Build + tag + push
-
+### 2) Build + tag + push
+```bash
 docker build -t smoodify:latest .
 
 docker tag smoodify:latest 987307484276.dkr.ecr.eu-central-1.amazonaws.com/smoodify:latest
 docker push 987307484276.dkr.ecr.eu-central-1.amazonaws.com/smoodify:latest
+```
 
-3) Recommended: versioned tags
-
+### 3) Recommended: versioned tags
+```bash
 GIT_SHA=$(git rev-parse --short HEAD)
 docker tag smoodify:latest 987307484276.dkr.ecr.eu-central-1.amazonaws.com/smoodify:$GIT_SHA
 docker push 987307484276.dkr.ecr.eu-central-1.amazonaws.com/smoodify:$GIT_SHA
+```
 
-4) ECS/ALB requirements
-	•	ALB Listener 80 → redirect to 443
-	•	ALB Listener 443 → forward to target group (container port 8080)
-	•	Task Definition env vars:
-
+### 4) ECS/ALB essentials
+- ALB Listener **80** → redirect to **443**
+- ALB Listener **443** → forward to target group (container port, e.g. `8080`)
+- Task env vars:
+```env
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://smoodify.site
 ASSET_URL=https://smoodify.site
 SESSION_SECURE_COOKIE=true
+```
 
+---
 
-⸻
-
-Force HTTPS / Fix Mixed Content
+## Force HTTPS / Fix Mixed Content
 
 If you see browser warnings like:
+> requested insecure content from `http://smoodify.site/build/assets/...`
 
-requested insecure content from http://smoodify.site/build/assets/...
-
-Checklist
-	1.	Trust proxy headers (X-Forwarded-Proto) in Laravel:
-app/Http/Middleware/TrustProxies.php
-
+### Fix checklist
+1) Trust proxy headers so Laravel recognizes HTTPS behind an ALB:
+`app/Http/Middleware/TrustProxies.php`
+```php
 protected $proxies = '*';
 protected $headers = \Illuminate\Http\Request::HEADER_X_FORWARDED_ALL;
+```
 
-	2.	Force HTTPS scheme in production:
-app/Providers/AppServiceProvider.php
-
+2) Force https URL generation in production:
+`app/Providers/AppServiceProvider.php`
+```php
 if (app()->environment('production')) {
     \Illuminate\Support\Facades\URL::forceScheme('https');
 }
+```
 
-	3.	Set env vars:
-
+3) Set env vars correctly:
+```env
 APP_URL=https://smoodify.site
 ASSET_URL=https://smoodify.site
+```
 
-	4.	Clear + recache config:
-
+4) Clear + recache:
+```bash
 php artisan optimize:clear
 php artisan config:cache
+```
 
-	5.	Recommended: make Vite output relative URLs to avoid scheme issues:
-vite.config.js
-
+5) Recommended: make Vite output **relative URLs**:
+`vite.config.js`
+```js
 export default defineConfig({
   base: "",
   // ...
 })
+```
 
 Then rebuild:
-
+```bash
 npm run build
+```
 
+---
 
-⸻
+## Troubleshooting
 
-Troubleshooting
+### Assets not loading / blank page
+- Dev: ensure `npm run dev` is running
+- Prod: ensure `npm run build` ran and `public/build/manifest.json` exists
+- Verify `APP_URL` / `ASSET_URL`
+- Clear caches:
+```bash
+php artisan optimize:clear
+```
 
-Blank page / missing JS/CSS
-	•	Dev: ensure Vite is running (npm run dev)
-	•	Prod: ensure npm run build was executed and public/build/manifest.json exists
-	•	Check that APP_URL and ASSET_URL are correct
-
-419 Page Expired (CSRF)
-	•	Ensure session driver is configured correctly
-	•	Make sure APP_URL matches the domain
-	•	In production behind HTTPS:
-
+### 419 Page Expired (CSRF)
+- Ensure `APP_URL` matches domain
+- In production behind HTTPS:
+```env
 SESSION_SECURE_COOKIE=true
+```
 
-Queue jobs not running
-	•	Start worker:
-
+### Jobs not running
+- Start queue worker:
+```bash
 php artisan queue:work
+```
+- If Redis: confirm host/port + network access
 
-	•	If using Redis: confirm Redis host/port and network access
+---
 
-3D scene lag (low-end GPUs)
-	•	Lower DPR (example: dpr={[1, 1.5]})
-	•	Reduce particle counts / heavy shader effects
-	•	Respect prefers-reduced-motion for users
+## Performance Tips
+- R3F (Three.js):
+  - lower DPR: `dpr={[1, 1.5]}`
+  - reduce particle counts / geometry segments
+  - respect `prefers-reduced-motion`
+- Framer Motion:
+  - gate heavy animations behind `useReducedMotion()`
+  - use `whileInView` with `once: true`
+- Laravel:
+  - `config:cache`, `route:cache`, `view:cache` in production
+  - Redis for cache/queue
+- CDN:
+  - CloudFront for `public/build` assets is a big win
 
-⸻
+---
 
-Performance Tips
-	•	React Three Fiber:
-	•	reduce DPR: dpr={[1, 1.5]}
-	•	reduce particles / geometry segments
-	•	avoid expensive effects on mobile
-	•	Framer Motion:
-	•	gate animations behind useReducedMotion()
-	•	prefer whileInView={{ once: true }} for heavy sections
-	•	Laravel:
-	•	config:cache, route:cache, view:cache in production
-	•	Redis for cache/queue
-	•	CDN:
-	•	CloudFront for public/build assets is a big win
+## Contributing
+1) Fork the repo
+2) Create a branch: `feat/my-feature`
+3) Run `npm run build` and any tests
+4) Open a PR
 
-⸻
+---
 
-Contributing
+## License
+MIT License.
 
-PRs welcome.
-	1.	Fork the repo
-	2.	Create a branch: feat/my-feature
-	3.	Run checks (build/tests)
-	4.	Open a PR with screenshots for UI changes
-
-⸻
-
-License
-
-Add your license here (MIT recommended) or keep private.
