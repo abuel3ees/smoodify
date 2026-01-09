@@ -40,7 +40,7 @@ RUN cp -n .env.example .env \
 
 # Install node deps and build assets
 RUN npm ci
-
+RUN rm -f public/hot
 RUN APP_ENV=production DB_CONNECTION=sqlite DB_DATABASE=/tmp/database.sqlite npm run build
 
 # Remove temp .env so it never leaks into final image

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Jobs\AnalyzeMoodJob;
 use App\Models\ListeningEvent;
+use App\Models\MoodDaily;
+use App\Models\MoodPattern;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
@@ -16,6 +18,8 @@ class DemoDataController extends Controller
 
     // wipe old demo data for clean runs
     ListeningEvent::where('user_id', $userId)->delete();
+    MoodDaily::where('user_id', $userId)->delete();
+    MoodPattern::where('user_id', $userId)->delete();
 
     $start = Carbon::now()->subDays(30)->startOfDay();
     $events = [];
