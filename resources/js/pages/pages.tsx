@@ -1,42 +1,53 @@
-"use client"
+// resources/js/Pages/Home.jsx
+// (Revamped for Laravel + Inertia + Vite + shadcn)
+// - Removed Next "use client"
+// - Removed TypeScript generics
+// - Uses Inertia router for actions
+// - Guards window usage
+// - Keeps your cinematic scroll landing intact
 
-import { useRef, useEffect, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import { router } from "@inertiajs/react"
 import { ScrollScene } from "@/components/scroll-scene"
 import { DataSection } from "@/components/data-section"
 import { ArchitectureSection } from "@/components/architecture-section"
 import { InsightsSection } from "@/components/insights-section"
 import { Waves, ChevronDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
-export default function HomePage() {
+export default function Home({ spotifyOnHold = true }) {
   const [scrollY, setScrollY] = useState(0)
   const [vh, setVh] = useState(1)
   const [currentSection, setCurrentSection] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef(null)
 
   useEffect(() => {
-    setVh(window.innerHeight)
+    if (typeof window === "undefined") return
+
+    const syncVh = () => setVh(window.innerHeight || 1)
+    syncVh()
 
     const handleScroll = () => {
-      setScrollY(window.scrollY)
-      const section = Math.floor(window.scrollY / window.innerHeight)
+      const y = window.scrollY || 0
+      setScrollY(y)
+      const section = Math.floor(y / (window.innerHeight || 1))
       setCurrentSection(section)
     }
 
-    const handleResize = () => {
-      setVh(window.innerHeight)
-    }
-
     window.addEventListener("scroll", handleScroll, { passive: true })
-    window.addEventListener("resize", handleResize)
+    window.addEventListener("resize", syncVh)
     handleScroll()
 
     return () => {
       window.removeEventListener("scroll", handleScroll)
-      window.removeEventListener("resize", handleResize)
+      window.removeEventListener("resize", syncVh)
     }
   }, [])
 
-  const scrollProgress = vh > 0 ? scrollY / (vh * 5) : 0
+  const scrollProgress = useMemo(() => {
+    return vh > 0 ? scrollY / (vh * 5) : 0
+  }, [scrollY, vh])
 
   const getConnectOpacity = () => {
     if (vh <= 0) return 0
@@ -48,16 +59,52 @@ export default function HomePage() {
     return Math.max(0, 50 - (scrollY - vh * 3.5) * 0.08)
   }
 
+  const navItems = useMemo(
+    () => [
+      { label: "Origin", idx: 0 },
+      { label: "Architecture", idx: 1 },
+      { label: "Analysis", idx: 2 },
+      { label: "Insights", idx: 3 },
+      { label: "Connect", idx: 4 },
+    ],
+    []
+  )
+
+  const scrollToSection = (i) => {
+    if (typeof window === "undefined") return
+    window.scrollTo({ top: i * vh, behavior: "smooth" })
+  }
+
+  const onInitialize = () => {
+    // Spotify on hold → generate demo data + queue analysis + land on dashboard
+    router.post(
+      "/demo-data/generate",
+      {},
+      {
+        preserveScroll: true,
+        onSuccess: () => router.visit("/dashboard"),
+      }
+    )
+  }
+
+  const onConnect = () => {
+    // Keep button + messaging for later; for now we route to dashboard with a flash idea
+    // (If you want a flash, do it server-side. This is a UX fallback.)
+    router.visit("/dashboard")
+  }
+
   return (
-    <div ref={containerRef} className="bg-background">
+    <div ref={containerRef} className="bg-background text-foreground">
+      {/* Cinematic background */}
       <div className="fixed inset-0 z-0">
         <ScrollScene scrollProgress={scrollProgress} currentSection={currentSection} />
       </div>
 
+      {/* Top header */}
       <header
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-700"
         style={{
-          opacity: scrollY > 100 ? 1 : 0.8,
+          opacity: scrollY > 100 ? 1 : 0.86,
           backgroundColor: scrollY > 100 ? "rgba(12, 13, 20, 0.9)" : "transparent",
           backdropFilter: scrollY > 100 ? "blur(12px)" : "none",
         }}
@@ -67,18 +114,23 @@ export default function HomePage() {
             <div className="h-8 w-8 border border-primary/50 flex items-center justify-center bg-primary/10">
               <Waves className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <h1 className="text-xl font-mono font-bold tracking-tight text-foreground">smoodify.</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-mono font-bold tracking-tight">smoodify.</h1>
+              {spotifyOnHold && (
+                <Badge variant="secondary" className="font-mono text-[10px] tracking-wider">
+                  SPOTIFY INTEGRATION ON HOLD
+                </Badge>
+              )}
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            {["Origin", "Architecture", "Analysis", "Insights", "Connect"].map((label, i) => (
+            {navItems.map(({ label, idx }) => (
               <button
-                key={i}
-                onClick={() => window.scrollTo({ top: i * vh, behavior: "smooth" })}
+                key={label}
+                onClick={() => scrollToSection(idx)}
                 className={`px-3 py-1 text-xs font-mono transition-all duration-500 ${
-                  currentSection === i
+                  currentSection === idx
                     ? "text-foreground bg-primary/20 border border-primary/50"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -111,15 +163,27 @@ export default function HomePage() {
           </h2>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
-            Automated correlation of Spotify audio features with emotional patterns. Zero-trust architecture. Real-time
-            behavioral insights.
+            Cloud-native mood analytics from audio features (valence + energy). Background processing with Redis queues.
+            Behavioral patterns by day-of-week and time-of-day.
           </p>
 
-          <div className="flex flex-col items-center gap-8">
-            <button className="group px-8 py-4 bg-primary text-primary-foreground font-mono text-sm tracking-wide hover:bg-primary/90 transition-all duration-300">
+          <div className="flex flex-col items-center gap-4">
+            <Button
+              size="lg"
+              className="font-mono tracking-wide px-8 py-6"
+              onClick={onInitialize}
+            >
               Initialize Analysis
-              <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">→</span>
-            </button>
+              <span className="inline-block ml-2 transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </Button>
+
+            <div className="text-xs font-mono text-muted-foreground">
+              {spotifyOnHold
+                ? "Demo mode: generates data, queues analysis, and opens your dashboard."
+                : "Connect Spotify to start analysis."}
+            </div>
           </div>
         </div>
 
@@ -157,32 +221,51 @@ export default function HomePage() {
           }}
         >
           <p className="text-xs font-mono text-muted-foreground tracking-wider mb-4">BEGIN YOUR ANALYSIS</p>
+
           <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-balance">
-            Connect Your
-            <br />
-            <span className="text-secondary">Spotify Account</span>
+            {spotifyOnHold ? (
+              <>
+                Launch Your
+                <br />
+                <span className="text-secondary">Demo Pipeline</span>
+              </>
+            ) : (
+              <>
+                Connect Your
+                <br />
+                <span className="text-secondary">Spotify Account</span>
+              </>
+            )}
           </h2>
+
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            Secure OAuth integration with encrypted token storage. Your data remains yours.
+            {spotifyOnHold
+              ? "Spotify ingestion is temporarily disabled. The analytics pipeline and pattern detection remain fully functional using demo or uploaded datasets."
+              : "Secure OAuth integration with encrypted token storage. Your data remains yours."}
           </p>
 
-          <button className="group px-10 py-5 border-2 border-secondary text-secondary font-mono tracking-wide hover:bg-secondary hover:text-secondary-foreground transition-all duration-500">
-            Authenticate with Spotify
+          <Button
+            variant={spotifyOnHold ? "secondary" : "outline"}
+            size="lg"
+            className="font-mono tracking-wide px-10 py-6 border-2"
+            onClick={spotifyOnHold ? onInitialize : onConnect}
+          >
+            {spotifyOnHold ? "Generate & Analyze" : "Authenticate with Spotify"}
             <span className="inline-block ml-3 transition-transform duration-300 group-hover:translate-x-2">→</span>
-          </button>
+          </Button>
 
           <div className="mt-12 grid grid-cols-3 gap-8 text-center">
             <div>
-              <p className="text-3xl font-bold font-mono text-foreground">256-bit</p>
-              <p className="text-xs font-mono text-muted-foreground mt-1">AES Encryption</p>
+              <p className="text-3xl font-bold font-mono text-foreground">Redis</p>
+              <p className="text-xs font-mono text-muted-foreground mt-1">Queue Processing</p>
             </div>
             <div>
-              <p className="text-3xl font-bold font-mono text-foreground">Zero</p>
-              <p className="text-xs font-mono text-muted-foreground mt-1">Trust Policy</p>
+              <p className="text-3xl font-bold font-mono text-foreground">RDS</p>
+              <p className="text-xs font-mono text-muted-foreground mt-1">Persistent Storage</p>
             </div>
             <div>
-              <p className="text-3xl font-bold font-mono text-foreground">AWS</p>
-              <p className="text-xs font-mono text-muted-foreground mt-1">KMS Managed</p>
+              <p className="text-3xl font-bold font-mono text-foreground">ECS</p>
+              <p className="text-xs font-mono text-muted-foreground mt-1">Fargate Runtime</p>
             </div>
           </div>
         </div>
@@ -197,15 +280,16 @@ export default function HomePage() {
               </div>
               <span className="text-sm font-mono text-muted-foreground">smoodify.</span>
             </div>
+
             <div className="flex gap-6 text-xs font-mono text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors duration-300">
+              <a href="/privacy" className="hover:text-foreground transition-colors duration-300">
                 Privacy
               </a>
-              <a href="#" className="hover:text-foreground transition-colors duration-300">
+              <a href="/terms" className="hover:text-foreground transition-colors duration-300">
                 Terms
               </a>
-              <a href="#" className="hover:text-foreground transition-colors duration-300">
-                API
+              <a href="/dashboard" className="hover:text-foreground transition-colors duration-300">
+                Dashboard
               </a>
             </div>
           </div>
